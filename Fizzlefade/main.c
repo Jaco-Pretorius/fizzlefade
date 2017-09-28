@@ -126,13 +126,13 @@ uint16_t feistel_network(uint16_t input) {
   uint16_t left, right, next_left, next_right;
   right = input & 0xFF;
   left = input >> 8;
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 5; i++) {
     next_left = right;
     next_right = left ^ random_number(right);
     right = next_left;
     left = next_right;
   }
-  return ((left << 8)|right) & 0xFFFF;
+  return ((left << 8)|right);
 }
 
 int main(int argc, const char * argv[]) {

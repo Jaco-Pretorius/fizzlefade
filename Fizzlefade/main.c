@@ -16,6 +16,8 @@ typedef void (*PIXEL_FUNC_PTR)(uint16_t, uint16_t);
 #define NEXT_NINE_BITS   (uint32_t)(0x1FF00)
 #define LINEAR_FEEDBACK_SHIFT_REGISTER_TAPS (uint32_t)(0x00012000)
 
+uint16_t feistel_network(uint16_t input);
+
 void fizzlefade(PIXEL_FUNC_PTR fizzle_pixel) {
   uint32_t random_value = 1;
   uint16_t x,y;
@@ -35,6 +37,18 @@ void fizzlefade(PIXEL_FUNC_PTR fizzle_pixel) {
       fizzle_pixel(x , y);
     }
   } while (random_value != 1);
+}
+
+void feistel_fizzlefade(PIXEL_FUNC_PTR fizzle_pixel) {
+  uint16_t random_position;
+  uint16_t i = 0;
+  do {
+    random_position = feistel_network(i);
+    if (random_position < 64000) {
+      fizzle_pixel(random_position % 320, random_position / 320);
+    }
+    i++;
+  } while (i != 65535);
 }
 
 void print_pixel(uint16_t x, uint16_t y) {
@@ -62,7 +76,7 @@ void test_every_x_position_is_between_0_and_320(uint16_t x, uint16_t y) {
 
 void test_every_y_position_is_between_0_and_200(uint16_t x, uint16_t y) {
   if (y < 0 || y >= 200) {
-    printf("test_every_y_position_is_between_0_and_200: %d was outside of the expected range\n", x);
+    printf("test_every_y_position_is_between_0_and_200: %d was outside of the expected range\n", y);
   }
 }
 
@@ -82,14 +96,14 @@ void test_every_possible_position_is_returned(uint16_t x, uint16_t y) {
 void run_all_tests() {
   printf("Running tests.\n");
   
-  fizzlefade(&test_every_x_position_is_between_0_and_320);
-  fizzlefade(&test_every_y_position_is_between_0_and_200);
+  feistel_fizzlefade(&test_every_x_position_is_between_0_and_320);
+  feistel_fizzlefade(&test_every_y_position_is_between_0_and_200);
   
   reset_test_screen();
-  fizzlefade(&test_every_position_is_unique);
+  feistel_fizzlefade(&test_every_position_is_unique);
   
   reset_test_screen();
-  fizzlefade(&test_every_possible_position_is_returned);
+  feistel_fizzlefade(&test_every_possible_position_is_returned);
   int x,y;
   for(x=0;x<320;x++) {
     for(y=0;y<200;y++) {
@@ -104,7 +118,25 @@ void run_all_tests() {
 
 // End of Test Functions
 
+uint16_t random_number(uint16_t input) {
+  return ((input + 123) * 42871);
+}
+
+uint16_t feistel_network(uint16_t input) {
+  uint16_t left, right, next_left, next_right;
+  right = input & 0xFF;
+  left = input >> 8;
+  for (int i = 0; i < 4; i++) {
+    next_left = right;
+    next_right = left ^ random_number(right);
+    right = next_left;
+    left = next_right;
+  }
+  return ((left << 8)|right) & 0xFFFF;
+}
+
 int main(int argc, const char * argv[]) {
   run_all_tests();
+
   return 0;
 }

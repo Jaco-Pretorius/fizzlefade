@@ -52,7 +52,7 @@ void feistel_fizzlefade(PIXEL_FUNC_PTR fizzle_pixel) {
 }
 
 uint16_t feistel_round(uint16_t input) {
-  return ((input + 123) * 42871);
+  return ((input + 123) * 42871) & 0xFF;
 }
 
 uint16_t feistel_network(uint16_t input) {
@@ -62,8 +62,8 @@ uint16_t feistel_network(uint16_t input) {
   for (uint8_t i = 0; i < 5; i++) {
     next_left = right;
     next_right = left ^ feistel_round(right);
-    right = next_left;
-    left = next_right;
+    right = next_right;
+    left = next_left;
   }
   return ((left << 8)|right);
 }
